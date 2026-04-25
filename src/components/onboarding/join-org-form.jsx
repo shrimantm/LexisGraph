@@ -1,81 +1,112 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Loader2, Users } from "lucide-react";
+import { ArrowRight, Loader2, Users, CheckCircle2 } from "lucide-react";
+import { safeFetch } from "@/lib/api";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 export function JoinOrgForm({ onComplete }) {
-  const [inviteCode, setInviteCode] = useState("");
+  const [orgCode, setOrgCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    if (!inviteCode.trim()) {
-      setError("Invite code is required");
+    const code = orgCode.trim();
+    if (!code) {
+      setError("Organization code is required");
       return;
     }
 
-    setError("");
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1500));
+    setError("");
+
+    const { data, isDemo: demoMode } = await safeFetch("/org/join", {
+      method: "POST",
+      body: JSON.stringify({ org_code: code }),
+    }, {
+      org_id: `org_${code.toLowerCase()}`,
+      status: "approved",
+    });
+
+    setIsDemo(demoMode);
+
+    if (data) {
+      if (demoMode || data.status === "approved") {
+        // In demo mode or auto-approved, go straight to dashboard
+        onComplete?.(data.org_id || `org_${code.toLowerCase()}`);
+      } else {
+        setSuccess(true);
+      }
+    } else {
+      setError("Could not join organization. Please try again.");
+    }
+
     setLoading(false);
-    onComplete?.({ inviteCode: inviteCode.trim() });
+  }
+
+  if (success) {
+    return (
+      <div className="space-y-4 rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-4 text-center">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-400">
+          <CheckCircle2 className="h-6 w-6" />
+        </div>
+        <div className="space-y-1">
+          <h3 className="font-medium text-white">Request Sent!</h3>
+          <p className="text-sm text-slate-400">
+            Your request to join is pending admin approval. You will be redirected once approved.
+          </p>
+        </div>
+        {isDemo && (
+          <Badge className="border-amber-800 bg-amber-900/30 text-amber-300" variant="outline">
+            Demo Mode
+          </Badge>
+        )}
+      </div>
+    );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Invite Code */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="invite-code"
-          className="block text-xs font-medium text-slate-300"
-        >
-          Invite Code
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="org-code" className="text-sm font-medium text-slate-300">
+          Organization Code
+        </Label>
         <Input
-          id="invite-code"
+          id="org-code"
           type="text"
-          placeholder="e.g. ORG-XXXX-YYYY"
-          value={inviteCode}
+          placeholder="ENTER-CODE"
+          value={orgCode}
           onChange={(e) => {
-            setInviteCode(e.target.value.toUpperCase());
+            setOrgCode(e.target.value.toUpperCase());
             if (error) setError("");
           }}
-          className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] font-mono text-white tracking-wider placeholder:text-slate-500 placeholder:font-sans placeholder:tracking-normal focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
+          className="h-11 rounded-lg border-slate-700 bg-slate-800/70 text-white placeholder:text-slate-500 transition-colors duration-200 focus-visible:border-indigo-400 focus-visible:ring-indigo-500/20"
           aria-invalid={!!error}
         />
-        {error ? (
-          <p className="text-xs text-red-400">{error}</p>
-        ) : (
-          <p className="text-[11px] text-slate-500">
-            Ask your admin for the organization invite code
-          </p>
-        )}
-      </div>
-
-      {/* Info box */}
-      <div className="rounded-xl border border-blue-500/10 bg-blue-500/[0.04] px-4 py-3">
-        <p className="text-xs leading-relaxed text-blue-300/80">
-          <span className="font-medium text-blue-300">How it works:</span>{" "}
-          Enter the invite code shared by your organization admin. You&apos;ll be
-          added as a team member with default permissions.
+        <p className="text-xs text-slate-500">
+          Ask your organization administrator for the 8-character code.
         </p>
       </div>
 
-      {/* Submit */}
+      {error ? <p className="text-xs text-red-400">{error}</p> : null}
+
       <Button
         type="submit"
-        disabled={!inviteCode.trim() || loading}
-        className="h-10 w-full gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 border-0 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/35 hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
+        disabled={!orgCode.trim() || loading}
+        className="mt-4 h-11 w-full gap-2 rounded-lg border-0 bg-linear-to-r from-indigo-500 to-purple-600 text-sm font-medium text-white shadow-lg shadow-indigo-900/40 transition-all duration-200 hover:from-indigo-400 hover:to-purple-500 hover:shadow-xl hover:shadow-indigo-900/60 disabled:opacity-40 disabled:shadow-none"
       >
         {loading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Joining organization…
+            Sending request...
           </>
         ) : (
           <>

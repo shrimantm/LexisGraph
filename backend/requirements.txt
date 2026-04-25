@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pymongo
+spacy
+pdfplumber
+python-docx
+requests
+beautifulsoup4
+apscheduler
+openpyxl
+reportlab
+python-multipart
+python-jose[cryptography]
+python-dotenv

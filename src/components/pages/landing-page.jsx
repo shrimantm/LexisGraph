@@ -1,5 +1,6 @@
 "use client";
 
+import { AuthProvider } from "@/hooks/use-auth";
 import { Navbar } from "@/components/landing/navbar";
 import { HeroSection } from "@/components/landing/hero-section";
 import { ProblemSection } from "@/components/landing/problem-section";
@@ -12,18 +13,20 @@ import { Footer } from "@/components/landing/footer";
 
 export function LandingPage() {
   return (
-    <div className="relative min-h-screen bg-[#07090f] text-slate-100">
-      <Navbar />
-      <main>
-        <HeroSection />
-        <ProblemSection />
-        <SolutionSection />
-        <FeaturesSection />
-        <HowItWorksSection />
-        <DemoSection />
-        <CtaSection />
-      </main>
-      <Footer />
-    </div>
+    <AuthProvider>
+      <div className="relative min-h-screen bg-[#07090f] text-slate-100">
+        <Navbar />
+        <main>
+          <HeroSection />
+          <ProblemSection />
+          <SolutionSection />
+          <FeaturesSection />
+          <HowItWorksSection />
+          <DemoSection />
+          <CtaSection />
+        </main>
+        <Footer />
+      </div>
+    </AuthProvider>
   );
 }

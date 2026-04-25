@@ -1,193 +1,148 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Building2, Users, CheckCircle2 } from "lucide-react";
-
+import { Building2, Loader2, Users } from "lucide-react";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { CreateOrgForm } from "@/components/onboarding/create-org-form";
 import { JoinOrgForm } from "@/components/onboarding/join-org-form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const tabs = [
-  {
-    key: "create",
-    label: "Create Organization",
-    icon: Building2,
-    description: "Set up a new organization for your team",
-  },
-  {
-    key: "join",
-    label: "Join Organization",
-    icon: Users,
-    description: "Join an existing team with an invite code",
-  },
-];
-
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("create");
-  const [done, setDone] = useState(false);
+  const { user, isLoaded, isSignedIn, updateUser } = useAuth();
+  const [checking, setChecking] = useState(true);
 
-  // Simulate Clerk-like auth check — redirect to sign-in if no mock session
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("lexisgraph_session");
-    // For demo purposes, allow access even without session
-    // In production, uncomment: if (!isLoggedIn) router.replace("/sign-in");
+    if (!isLoaded) return;
 
-    // If already onboarded, go straight to dashboard
-    const onboarded = localStorage.getItem("lexisgraph_onboarded");
-    if (onboarded === "true") {
-      router.replace("/dashboard");
+    if (!isSignedIn) {
+      router.replace("/sign-in");
+      return;
     }
-  }, [router]);
 
-  function handleComplete(data) {
-    // Store onboarding status
-    localStorage.setItem("lexisgraph_onboarded", "true");
-    localStorage.setItem("lexisgraph_org", JSON.stringify(data));
-    setDone(true);
+    // If user already has org, go to dashboard
+    if (user?.org_id) {
+      router.replace("/dashboard");
+      return;
+    }
 
-    // Short success animation, then redirect
-    setTimeout(() => {
-      router.push("/dashboard");
-    }, 1500);
+    setChecking(false);
+  }, [isLoaded, isSignedIn, user, router]);
+
+  if (!isLoaded || checking || !isSignedIn) {
+    return (
+      <div className="relative flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-32 left-1/2 h-130 w-180 -translate-x-1/2 rounded-full bg-linear-to-b from-indigo-500/15 via-purple-500/10 to-transparent blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 h-90 w-90 rounded-full bg-indigo-600/10 blur-3xl" />
+        </div>
+
+        <Card className="relative z-10 w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 text-slate-100 shadow-2xl shadow-black/50">
+          <CardContent className="flex items-center justify-center gap-3 p-0 text-sm text-slate-300">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Preparing your workspace...
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  function handleComplete(orgId) {
+    updateUser({ org_id: orgId || `org_${Date.now()}` });
+    router.push("/dashboard");
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#020617] px-4 py-16">
-      {/* ── Ambient background ── */}
+    <div className="relative flex min-h-screen items-center justify-center bg-slate-950 px-4 py-16">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-gradient-to-b from-blue-500/15 via-violet-500/8 to-transparent blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 h-[350px] w-[350px] rounded-full bg-violet-600/8 blur-3xl" />
+        <div className="absolute -top-32 left-1/2 h-130 w-180 -translate-x-1/2 rounded-full bg-linear-to-b from-indigo-500/15 via-purple-500/10 to-transparent blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 h-90 w-90 rounded-full bg-indigo-600/10 blur-3xl" />
         <div
-          className="absolute inset-0 opacity-[0.025]"
+          className="absolute inset-0 opacity-[0.03]"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
+            backgroundSize: "56px 56px",
           }}
         />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
-        <Link href="/" className="mb-8 flex items-center justify-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/25 transition-shadow group-hover:shadow-blue-500/40">
+        <Link href="/" className="mb-8 flex items-center justify-center gap-2.5 transition-opacity hover:opacity-90">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-900/50 transition-all duration-300">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M12 3v3m0 12v3M3 12h3m12 0h3M5.636 5.636l2.121 2.121m8.486 8.486l2.121 2.121M5.636 18.364l2.121-2.121m8.486-8.486l2.121-2.121" />
             </svg>
           </div>
-          <span className="text-xl font-semibold tracking-tight text-white">
-            Lexis<span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">Graph</span>
+          <span className="text-[30px] font-semibold tracking-tight text-white">
+            Lexis<span className="bg-linear-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent">Graph</span>
           </span>
         </Link>
 
-        {/* ── Success state ── */}
-        {done ? (
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0f172a]/80 p-10 text-center shadow-2xl shadow-black/40 backdrop-blur-xl">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
-              <CheckCircle2 className="h-8 w-8 text-emerald-400" />
-            </div>
-            <h2 className="text-xl font-bold text-white">You&apos;re all set!</h2>
-            <p className="mt-2 text-sm text-slate-400">
-              Redirecting to your dashboard…
-            </p>
-            <div className="mx-auto mt-4 h-1 w-32 overflow-hidden rounded-full bg-white/[0.06]">
-              <div className="h-full animate-pulse rounded-full bg-gradient-to-r from-blue-500 to-violet-500" style={{ animation: "grow-bar 1.5s ease forwards" }} />
-            </div>
-          </div>
-        ) : (
-          /* ── Card ── */
-          <div className="rounded-2xl border border-white/[0.06] bg-[#0f172a]/80 shadow-2xl shadow-black/40 backdrop-blur-xl">
-            {/* Header */}
-            <div className="border-b border-white/[0.06] px-8 pt-8 pb-6">
-              {/* Step indicator */}
-              <div className="mb-4 flex items-center justify-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-[10px] font-bold text-white">
-                    1
-                  </div>
-                  <span className="text-xs font-medium text-blue-400">Sign Up</span>
-                </div>
-                <div className="h-px w-8 bg-blue-500/30" />
-                <div className="flex items-center gap-1.5">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 text-[10px] font-bold text-white ring-2 ring-blue-500/30 ring-offset-2 ring-offset-[#0f172a]">
-                    2
-                  </div>
-                  <span className="text-xs font-semibold text-white">Setup</span>
-                </div>
-                <div className="h-px w-8 bg-white/[0.06]" />
-                <div className="flex items-center gap-1.5">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-[10px] font-bold text-slate-500">
-                    3
-                  </div>
-                  <span className="text-xs text-slate-500">Dashboard</span>
-                </div>
-              </div>
+        <div className="relative">
+          <div className="pointer-events-none absolute inset-0 -z-10 rounded-2xl bg-linear-to-br from-indigo-500/10 to-purple-500/10 blur-2xl" />
 
-              <h1 className="text-center text-xl font-bold tracking-tight text-white">
-                Set up your organization
-              </h1>
-              <p className="mt-1.5 text-center text-sm text-slate-400">
-                Create a new organization or join an existing one
-              </p>
-            </div>
+          <Card className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-slate-100 shadow-2xl shadow-black/50 transition-all duration-300">
+            <CardHeader className="space-y-2 p-0 text-center">
+              <CardTitle className="text-2xl font-semibold text-white">Set up your organization</CardTitle>
+              <CardDescription className="text-sm text-slate-400">
+                Create your workspace to start analyzing compliance.
+              </CardDescription>
+            </CardHeader>
 
-            {/* Tab switcher */}
-            <div className="grid grid-cols-2 gap-0 border-b border-white/[0.06]">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const active = activeTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveTab(tab.key)}
-                    className={`relative flex flex-col items-center gap-1 px-4 py-4 text-center transition-all ${
-                      active
-                        ? "text-white"
-                        : "text-slate-500 hover:text-slate-300"
-                    }`}
+            <CardContent className="mt-6 p-0">
+              <Tabs defaultValue="create" className="flex flex-col gap-4 transition-all duration-300">
+                <TabsList className="grid h-11 w-full grid-cols-2 rounded-lg border border-slate-800 bg-slate-950/70 p-1">
+                  <TabsTrigger
+                    value="create"
+                    className="h-full gap-1.5 rounded-md px-2 text-xs font-medium text-slate-400 transition-all duration-200 after:hidden data-active:bg-slate-800 data-active:text-white data-active:shadow-sm hover:text-slate-200 sm:text-sm"
                   >
-                    <Icon className={`h-5 w-5 ${active ? "text-blue-400" : ""}`} />
-                    <span className="text-xs font-medium">{tab.label}</span>
-                    {/* Active indicator */}
-                    {active && (
-                      <div className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-gradient-to-r from-blue-500 to-violet-500" />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+                    <Building2 className="h-4 w-4" />
+                    Create Organization
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="join"
+                    className="h-full gap-1.5 rounded-md px-2 text-xs font-medium text-slate-400 transition-all duration-200 after:hidden data-active:bg-slate-800 data-active:text-white data-active:shadow-sm hover:text-slate-200 sm:text-sm"
+                  >
+                    <Users className="h-4 w-4" />
+                    Join Organization
+                  </TabsTrigger>
+                </TabsList>
 
-            {/* Form content */}
-            <div className="px-8 py-6">
-              {/* Tab description */}
-              <p className="mb-5 text-center text-xs text-slate-500">
-                {tabs.find((t) => t.key === activeTab)?.description}
-              </p>
+                <TabsContent value="create" className="mt-0">
+                  <div className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-4 sm:p-5">
+                    <CreateOrgForm onComplete={handleComplete} />
+                  </div>
+                </TabsContent>
 
-              {activeTab === "create" ? (
-                <CreateOrgForm onComplete={handleComplete} />
-              ) : (
-                <JoinOrgForm onComplete={handleComplete} />
-              )}
-            </div>
-          </div>
-        )}
+                <TabsContent value="join" className="mt-0">
+                  <div className="rounded-xl border border-slate-800/80 bg-slate-950/50 p-4 sm:p-5">
+                    <JoinOrgForm onComplete={handleComplete} />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* Progress bar animation style */}
-      <style jsx>{`
-        @keyframes grow-bar {
-          from {
-            width: 0%;
-          }
-          to {
-            width: 100%;
-          }
-        }
-      `}</style>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <AuthProvider>
+      <OnboardingContent />
+    </AuthProvider>
   );
 }

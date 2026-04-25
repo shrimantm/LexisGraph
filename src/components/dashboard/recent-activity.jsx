@@ -1,52 +1,50 @@
-import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Activity } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { activityTimeline } from "@/components/dashboard/dashboard-data";
 
 export function RecentActivity() {
   return (
-    <Card className="border-slate-800 bg-slate-900/70 text-slate-100">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription className="text-slate-400">
-              Timeline of ingestion, analysis, and remediation events.
-            </CardDescription>
+    <div className="card-hover rounded-2xl border border-white/[0.06] bg-[#0d0f18]">
+      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
+            <Activity className="h-4 w-4 text-violet-400" />
           </div>
-          <Badge className="border-slate-700 bg-slate-900 text-slate-300" variant="outline">
-            Last 24h
-          </Badge>
+          <div>
+            <h3 className="text-[14px] font-semibold text-white">Recent Activity</h3>
+            <p className="text-[12px] text-slate-500">Last 24 hours</p>
+          </div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <ScrollArea className="h-[260px] pr-2">
-          <ol className="space-y-4">
-            {activityTimeline.map((item, index) => (
-              <li key={`${item.title}-${item.time}`} className="relative pl-5">
-                <span className="absolute left-0 top-2 h-2.5 w-2.5 rounded-full bg-cyan-400" />
-                {index < activityTimeline.length - 1 ? (
-                  <span className="absolute left-[4px] top-5 h-[calc(100%-2px)] w-px bg-slate-700" />
-                ) : null}
-                <p className="text-sm font-medium text-slate-200">{item.title}</p>
-                <p className="mt-1 text-xs text-slate-400">{item.description}</p>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                  <span>{item.actor}</span>
-                  <span>•</span>
-                  <span>{item.time}</span>
-                </div>
-              </li>
-            ))}
+      </div>
+
+      <div className="px-5 pb-5">
+        <ScrollArea className="h-[240px] pr-1">
+          <ol className="space-y-0">
+            {activityTimeline.map((item, index) => {
+              const isLast = index === activityTimeline.length - 1;
+              return (
+                <li key={`${item.title}-${index}`} className="relative pl-6 pb-4">
+                  {/* Dot */}
+                  <span className="absolute left-0 top-[7px] h-2 w-2 rounded-full bg-blue-400/80 ring-2 ring-[#0d0f18]" />
+                  {/* Connector line */}
+                  {!isLast && (
+                    <span className="absolute left-[3px] top-[15px] h-[calc(100%-8px)] w-px bg-white/[0.06]" />
+                  )}
+
+                  <p className="text-[13px] font-medium text-slate-200 leading-snug">{item.title}</p>
+                  <p className="mt-0.5 text-[12px] text-slate-500">{item.description}</p>
+                  <div className="mt-1.5 flex items-center gap-2 text-[11px] text-slate-600">
+                    <span className="font-medium text-slate-400">{item.actor}</span>
+                    <span className="h-0.5 w-0.5 rounded-full bg-slate-700" />
+                    <span>{item.time}</span>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

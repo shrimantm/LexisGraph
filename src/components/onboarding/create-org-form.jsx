@@ -2,185 +2,89 @@
 
 import { useState } from "react";
 import { Building2, ArrowRight, Loader2 } from "lucide-react";
+import { safeFetch } from "@/lib/api";
+import { MOCK_ORG } from "@/lib/mock-data";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-const industries = [
-  "Financial Services",
-  "Healthcare & Pharma",
-  "Technology & Software",
-  "Insurance",
-  "Energy & Utilities",
-  "Manufacturing",
-  "Government & Public Sector",
-  "Legal Services",
-  "Consulting",
-  "Other",
-];
-
-const companySizes = [
-  "1–10 employees",
-  "11–50 employees",
-  "51–200 employees",
-  "201–1,000 employees",
-  "1,001–5,000 employees",
-  "5,001+ employees",
-];
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 export function CreateOrgForm({ onComplete }) {
-  const [form, setForm] = useState({
-    companyName: "",
-    industry: "",
-    companySize: "",
-  });
+  const [organizationName, setOrganizationName] = useState("");
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  function update(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
-        return next;
-      });
-    }
-  }
-
-  function validate() {
-    const errs = {};
-    if (!form.companyName.trim()) errs.companyName = "Company name is required";
-    if (!form.industry) errs.industry = "Please select an industry";
-    if (!form.companySize) errs.companySize = "Please select company size";
-    return errs;
-  }
+  const [error, setError] = useState("");
+  const [isDemo, setIsDemo] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const errs = validate();
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
+
+    const name = organizationName.trim();
+    if (!name) {
+      setError("Organization name is required");
+      return;
+    }
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1800));
+    setError("");
+
+    const { data, isDemo: demoMode } = await safeFetch("/org/create", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }, {
+      ...MOCK_ORG,
+      _id: `org_${Date.now()}`,
+      name,
+    });
+
+    setIsDemo(demoMode);
+
+    if (data) {
+      onComplete?.(data._id);
+    } else {
+      setError("Could not create organization. Please try again.");
+    }
+
     setLoading(false);
-    onComplete?.(form);
   }
 
-  const isDisabled = !form.companyName || !form.industry || !form.companySize || loading;
+  const isDisabled = !organizationName.trim() || loading;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Company Name */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="org-name"
-          className="block text-xs font-medium text-slate-300"
-        >
-          Company Name
-        </label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="org-name" className="text-sm font-medium text-slate-300">
+          Organization Name
+        </Label>
         <Input
           id="org-name"
           type="text"
-          placeholder="Acme Corporation"
-          value={form.companyName}
-          onChange={(e) => update("companyName", e.target.value)}
-          className="h-10 rounded-xl border-white/[0.08] bg-white/[0.03] text-white placeholder:text-slate-500 focus-visible:border-blue-500/50 focus-visible:ring-blue-500/20"
-          aria-invalid={!!errors.companyName}
+          placeholder="Acme Legal"
+          value={organizationName}
+          onChange={(e) => {
+            setOrganizationName(e.target.value);
+            if (error) setError("");
+          }}
+          className="h-11 rounded-lg border-slate-700 bg-slate-800/70 text-white placeholder:text-slate-500 transition-colors duration-200 focus-visible:border-indigo-400 focus-visible:ring-indigo-500/20"
+          aria-invalid={!!error}
         />
-        {errors.companyName ? (
-          <p className="text-xs text-red-400">{errors.companyName}</p>
-        ) : (
-          <p className="text-[11px] text-slate-500">
-            This will be your organization&apos;s display name
-          </p>
-        )}
+        <p className="text-xs text-slate-500">
+          This will be your company workspace inside LexisGraph.
+        </p>
       </div>
 
-      {/* Industry */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="org-industry"
-          className="block text-xs font-medium text-slate-300"
-        >
-          Industry
-        </label>
-        <div className="relative">
-          <select
-            id="org-industry"
-            value={form.industry}
-            onChange={(e) => update("industry", e.target.value)}
-            className="h-10 w-full appearance-none rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 pr-8 text-sm text-white outline-none transition-colors focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 [&>option]:bg-[#0f172a] [&>option]:text-white"
-            aria-invalid={!!errors.industry}
-          >
-            <option value="" disabled className="text-slate-500">
-              Select industry
-            </option>
-            {industries.map((ind) => (
-              <option key={ind} value={ind}>
-                {ind}
-              </option>
-            ))}
-          </select>
-          <svg
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-        {errors.industry && (
-          <p className="text-xs text-red-400">{errors.industry}</p>
-        )}
-      </div>
+      {error ? <p className="text-xs text-red-400">{error}</p> : null}
 
-      {/* Company Size */}
-      <div className="space-y-1.5">
-        <label
-          htmlFor="org-size"
-          className="block text-xs font-medium text-slate-300"
-        >
-          Company Size
-        </label>
-        <div className="relative">
-          <select
-            id="org-size"
-            value={form.companySize}
-            onChange={(e) => update("companySize", e.target.value)}
-            className="h-10 w-full appearance-none rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 pr-8 text-sm text-white outline-none transition-colors focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20 [&>option]:bg-[#0f172a] [&>option]:text-white"
-            aria-invalid={!!errors.companySize}
-          >
-            <option value="" disabled className="text-slate-500">
-              Select company size
-            </option>
-            {companySizes.map((size) => (
-              <option key={size} value={size}>
-                {size}
-              </option>
-            ))}
-          </select>
-          <svg
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-        {errors.companySize && (
-          <p className="text-xs text-red-400">{errors.companySize}</p>
-        )}
-      </div>
+      {isDemo && (
+        <Badge className="border-amber-800 bg-amber-900/30 text-amber-300" variant="outline">
+          Demo Mode
+        </Badge>
+      )}
 
-      {/* Submit */}
       <Button
         type="submit"
         disabled={isDisabled}
-        className="h-10 w-full gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 border-0 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition-all hover:shadow-blue-500/35 hover:brightness-110 disabled:opacity-40 disabled:shadow-none"
+        className="mt-4 h-11 w-full gap-2 rounded-lg border-0 bg-linear-to-r from-indigo-500 to-purple-600 text-sm font-medium text-white shadow-lg shadow-indigo-900/40 transition-all duration-200 hover:from-indigo-400 hover:to-purple-500 hover:shadow-xl hover:shadow-indigo-900/60 disabled:opacity-40 disabled:shadow-none"
       >
         {loading ? (
           <>

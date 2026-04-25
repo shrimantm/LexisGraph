@@ -23,15 +23,15 @@ export function ClerkSetupRequired() {
       </div>
 
       <div className="mt-8 flex flex-col gap-3">
-        <Button 
-          asChild
-          className="bg-amber-500 hover:bg-amber-600 text-black font-semibold"
+        <a
+          href="https://dashboard.clerk.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-600 text-black font-semibold text-sm h-8 px-2.5 transition-all"
         >
-          <a href="https://dashboard.clerk.com" target="_blank" rel="noopener noreferrer">
             Get Keys from Clerk Dashboard
             <ExternalLink className="ml-2 h-4 w-4" />
-          </a>
-        </Button>
+        </a>
         <Button 
           variant="ghost" 
           className="text-slate-500 hover:text-slate-300"

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useUser, useClerk } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 import { Menu, X, LogOut } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,7 @@ const navLinks = [
 
 export function Navbar() {
   const router = useRouter();
-  const { isSignedIn, user } = useUser();
-  const { signOut } = useClerk();
+  const { isSignedIn, user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -29,11 +28,11 @@ export function Navbar() {
   }, []);
 
   /** Smart redirect — auth-aware routing */
-  function handleSignUp() {
+  function handleGetStarted() {
     if (isSignedIn) {
       router.push("/dashboard");
     } else {
-      router.push("/sign-up");
+      router.push("/sign-in");
     }
   }
 
@@ -46,7 +45,8 @@ export function Navbar() {
   }
 
   function handleSignOut() {
-    signOut(() => router.push("/"));
+    logout();
+    router.push("/");
   }
 
   return (
@@ -90,7 +90,7 @@ export function Navbar() {
           {isSignedIn ? (
             <>
               <span className="mr-1 text-sm text-slate-400">
-                {user?.firstName || user?.emailAddresses?.[0]?.emailAddress}
+                {user?.name || user?.email}
               </span>
               <Button
                 variant="ghost"
@@ -120,9 +120,9 @@ export function Navbar() {
               </Button>
               <Button
                 className="bg-gradient-to-r from-blue-500 to-violet-600 border-0 text-white shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-shadow"
-                onClick={handleSignUp}
+                onClick={handleGetStarted}
               >
-                Sign Up
+                Get Started
               </Button>
             </>
           )}
@@ -181,9 +181,9 @@ export function Navbar() {
                   </Button>
                   <Button
                     className="w-full bg-gradient-to-r from-blue-500 to-violet-600 border-0 text-white"
-                    onClick={() => { handleSignUp(); setMobileOpen(false); }}
+                    onClick={() => { handleGetStarted(); setMobileOpen(false); }}
                   >
-                    Sign Up
+                    Get Started
                   </Button>
                 </>
               )}

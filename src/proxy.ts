@@ -1,6 +1,10 @@
-import { clerkMiddleware } from '@clerk/nextjs/server'
-
-export default clerkMiddleware()
+/**
+ * Middleware — no-op.
+ * Clerk auth removed; routes are protected client-side.
+ */
+export default function middleware() {
+  // pass-through — client-side auth guards handle protection
+}
 
 export const config = {
   matcher: [

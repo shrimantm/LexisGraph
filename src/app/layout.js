@@ -1,5 +1,4 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider, Show, UserButton } from "@clerk/nextjs";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -25,16 +24,7 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ClerkProvider>
-          {/* Keep only signed-in profile action globally to avoid duplicate signed-out CTAs */}
-          <header className="fixed top-4 right-4 z-[100] flex items-center gap-3">
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
-          </header>
-
-          {children}
-        </ClerkProvider>
+        {children}
       </body>
     </html>
   );
